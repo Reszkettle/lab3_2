@@ -11,8 +11,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -21,7 +20,7 @@ class OrderTest {
     @Mock
     private Clock clock;
 
-    private static long INVALID_HOURS_PERIOD = Order.VALID_PERIOD_HOURS + 1;
+    private static final long INVALID_HOURS_PERIOD = Order.VALID_PERIOD_HOURS + 1;
 
     private Order order;
 
@@ -86,6 +85,22 @@ class OrderTest {
 
         // then
         assertThrows(OrderExpiredException.class, () -> order.confirm());
+    }
+
+    @Test
+    void shouldNotThrowExceptionWhenOrderIsActiveOnConfirmation() {
+        // given
+        Instant submissionTime = Instant.EPOCH;
+        Instant confirmationTime = submissionTime.plus(Order.VALID_PERIOD_HOURS, ChronoUnit.HOURS);
+
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(clock.instant()).thenReturn(submissionTime).thenReturn(confirmationTime);
+
+        // when
+        order.submit();
+
+        // then
+        assertDoesNotThrow(() -> order.confirm());
     }
 
 
