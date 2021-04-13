@@ -12,6 +12,7 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -70,5 +71,23 @@ class OrderTest {
         // then
         assertEquals(expectedState, order.getOrderState());
     }
+
+    @Test
+    void shouldThrowOrderExpiredExceptionWhenOrderIsExpiredOnConfirmation() {
+        // given
+        Instant submissionTime = Instant.EPOCH;
+        Instant confirmationTime = submissionTime.plus(INVALID_HOURS_PERIOD, ChronoUnit.HOURS);
+
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(clock.instant()).thenReturn(submissionTime).thenReturn(confirmationTime);
+
+        // when
+        order.submit();
+
+        // then
+        assertThrows(OrderExpiredException.class, () -> order.confirm());
+    }
+
+
 
 }
